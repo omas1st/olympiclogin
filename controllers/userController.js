@@ -33,7 +33,7 @@ const register = async (req, res) => {
       });
     }
 
-    // Create new user (password hashed but no restrictions)
+    // Create new user
     const hashed = await bcrypt.hash(password, 10);
     const user = new User({ name, email: email.toLowerCase(), phone, country, password: hashed });
     await user.save();
@@ -80,8 +80,25 @@ const login = async (req, res) => {
       });
     }
 
-    // Check password
-    const match = await bcrypt.compare(password, user.password);
+    // Check password - handle both hashed and plaintext scenarios
+    let match = false;
+    
+    // Check if password is stored as hash
+    if (user.password.startsWith('$2a$')) {
+      match = await bcrypt.compare(password, user.password);
+    } 
+    // Handle legacy plaintext passwords
+    else {
+      match = (password === user.password);
+      
+      // If matched with plaintext, upgrade to hashed
+      if (match) {
+        const hashed = await bcrypt.hash(password, 10);
+        user.password = hashed;
+        await user.save();
+      }
+    }
+
     if (!match) {
       return res.status(401).json({ 
         message: 'Invalid credentials' 
@@ -108,7 +125,7 @@ const login = async (req, res) => {
       isAdmin: false
     });
   } catch (err) {
-    console.error(err.message);
+    console.error('Login error:', err.message);
     res.status(500).json({ 
       message: 'Server error during login',
       error: err.message 
