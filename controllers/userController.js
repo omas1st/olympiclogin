@@ -33,7 +33,7 @@ const register = async (req, res) => {
       });
     }
 
-    // Create new user
+    // Create new user (password hashed but no restrictions)
     const hashed = await bcrypt.hash(password, 10);
     const user = new User({ name, email: email.toLowerCase(), phone, country, password: hashed });
     await user.save();
