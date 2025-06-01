@@ -11,11 +11,11 @@ const {
 } = require('../controllers/userController');
 const auth = require('../middlewares/auth');
 
-// Register route with no password restrictions
+// Register route with phone number validation removed
 router.post('/register', [
   check('name').notEmpty().withMessage('Name is required'),
   check('email').isEmail().withMessage('Invalid email format'),
-  check('phone').isMobilePhone().withMessage('Invalid phone number'),
+  check('phone').notEmpty().withMessage('Phone number is required'),
   check('country').notEmpty().withMessage('Country is required'),
   check('password').notEmpty().withMessage('Password is required')
 ], register);
